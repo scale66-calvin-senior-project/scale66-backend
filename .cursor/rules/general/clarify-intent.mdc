@@ -1,0 +1,109 @@
+---
+alwaysApply: false
+---
+# Clarify Intent Rule
+
+## When to Pause and Clarify
+
+Before changes, evaluate if either condition is met:
+
+### 1. Unclear Instructions
+
+Prompt is vague when:
+- Missing specific files/functions/components
+- Ambiguous terminology with multiple meanings
+- No clear success criteria
+- Missing context about why
+- Multiple valid interpretations
+
+### 2. Drastic Changes
+
+Change seems excessive when:
+- Affects multiple unrelated files/systems
+- Contradicts existing patterns ([preserve-patterns.mdc](mdc:.cursor/rules/meta/preserve-patterns.mdc))
+- Removes/rewrites significant working code
+- Introduces new dependencies/paradigms
+- Scope larger than likely intended
+- Requires database schema/API/core logic changes
+
+**Pattern check:** Consult [feature-modules.mdc](mdc:.cursor/rules/frontend/architecture/feature-modules.mdc), [frontend-components.mdc](mdc:.cursor/rules/frontend/components/frontend-components.mdc), [fastapi-endpoints.mdc](mdc:.cursor/rules/backend/api/fastapi-endpoints.mdc), [supabase-integration.mdc](mdc:.cursor/rules/backend/database/supabase-integration.mdc), [singleton-pattern.mdc](mdc:.cursor/rules/backend/patterns/singleton-pattern.mdc), [ai-agent-pattern.mdc](mdc:.cursor/rules/backend/agents/ai-agent-pattern.mdc)
+
+## Required Actions
+
+If either condition met, STOP and:
+
+### 1. Ask Clarifying Questions (3-5)
+
+- **Scope:** "Which specific files/components affected?"
+- **Intent:** "What problem are you solving?"
+- **Constraints:** "Follow existing patterns or introduce new?"
+- **Impact:** "Aware this affects [related areas]?"
+- **Alternatives:** "Would [simpler approach] work?"
+
+### 2. Explain Impact
+
+- Files/components modified
+- Code changed/removed
+- New code/patterns introduced
+- Side effects/breaking changes
+- Scope (small/medium/large)
+
+## Example Scenarios
+
+### Vague Instruction
+
+User: "Make the dashboard better"
+
+> Before changes, clarify:
+> 1. Which aspect - layout, performance, data display, UX?
+> 2. Specific components to focus on?
+> 3. Reference design or specific improvements?
+> 4. Follow existing patterns or introduce new?
+>
+> This ensures targeted improvements.
+
+### Drastic Change
+
+User: "Refactor auth system to different approach"
+
+> Significant impact. Before proceeding:
+> 1. What issues with current auth are you solving?
+> 2. Aware this affects: AuthContext, middleware, protected routes, API endpoints?
+> 3. Gradual migration or complete replacement?
+> 4. Specific auth pattern/library in mind?
+> 5. Maintain backward compatibility?
+>
+> **Impact:**
+> - Files: 15-20+
+> - Components: Auth feature, middleware, context
+> - Risk: High - all authenticated functionality
+>
+> Confirm scope before proceeding.
+
+## When NOT to Clarify
+
+Proceed directly when:
+- Instruction specific and actionable
+- Change isolated to clearly identified files
+- Follows established patterns
+- User provided sufficient context
+- Scope proportional to request
+
+## Response Format
+
+```
+Before changes, clarify:
+
+1. [Scope/intent question]
+2. [Specific files/components question]
+3. [Patterns/approach question]
+4. [Impact awareness question] (if drastic)
+5. [Alternatives question] (if applicable)
+
+**Potential Impact:**
+- Files: [list/estimate]
+- Scope: [small/medium/large]
+- Risk: [low/medium/high]
+
+Provide details so I can make right changes.
+```

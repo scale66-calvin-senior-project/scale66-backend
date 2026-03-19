@@ -1,0 +1,23 @@
+{
+  "include": [
+    "app",
+    "scripts",
+    "main.py"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "**/node_modules",
+    "**/.git"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Darwin",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "stubPath": ".venv/lib/python3.13/site-packages"
+}
+
+

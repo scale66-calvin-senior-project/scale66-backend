@@ -1,0 +1,52 @@
+{
+	"templates": [
+		{
+			"id": "carousel-1",
+			"carousel_format": "listicle_tips",
+			"description": "This carousel template utilizes a cohesive, monochromatic design system based on a soothing palette of light periwinkle and deep navy blue, perfectly suited for nature and wildlife topics. The aesthetic is defined by flat, vector-style silhouettes representing animals and landscapes, creating a clean and modern look. Typography is consistent throughout, pairing a bold, organic brush-script font for headlines\u2014which adds a touch of adventure and informality\u2014with a simple, sans-serif font for body text and branding to ensure high readability. The hook slide introduces the theme with a unique composition, featuring a large, asymmetrical title and a prominent foreground silhouette of a stag to grab attention. The body slides transition into a standardized layout with centered text and a recurring footer illustration of a 'safari parade' (featuring elephants, giraffes, and hippos) against a mountain backdrop. This consistent bottom-heavy imagery anchors the content, while the persistent background color and header/footer elements ensure a seamless visual flow across the entire deck.",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		},
+		{
+			"id": "carousel-2",
+			"carousel_format": "listicle_tips",
+			"description": "",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		},
+		{
+			"id": "carousel-3",
+			"carousel_format": "listicle_tips",
+			"description": "",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		},
+		{
+			"id": "carousel-4",
+			"carousel_format": "listicle_tips",
+			"description": "",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		},
+		{
+			"id": "carousel-5",
+			"carousel_format": "listicle_tips",
+			"description": "",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		},
+		{
+			"id": "carousel-6",
+			"carousel_format": "listicle_tips",
+			"description": "",
+			"hook": "",
+			"body": "",
+			"cta": ""
+		}
+	]
+}

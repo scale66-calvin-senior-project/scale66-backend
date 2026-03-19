@@ -1,0 +1,79 @@
+---
+alwaysApply: false
+---
+# Rule Improvement Guidelines
+
+## When to Add New Rules
+
+Create when a pattern:
+
+- Appears in 3+ files
+- Could prevent common bugs
+- Enforces specific best practices
+- Requires external documentation reference
+
+Don't create for:
+
+- One-off implementations
+- Obvious language features
+- Overly specific edge cases
+- Frequently changing patterns
+
+New rules MUST be token-efficient:
+
+- Remove redundant explanations
+- Use concise examples
+- Eliminate duplicate information
+- Structure for quick scanning
+
+## When to Modify Existing Rules
+
+Update when:
+
+- Better examples exist in codebase
+- New edge cases discovered
+- Related rules updated
+- Implementation details changed
+- Rule is verbose or inefficient (refactor for token efficiency)
+
+## When to Deprecate Rules
+
+Remove when:
+
+- Pattern no longer applies
+- Superseded by better approach
+- Document migration path if needed
+
+## Rule Quality Standards
+
+- Actionable and specific
+- Examples from actual code
+- Up-to-date references
+- Consistently enforced
+- Token-efficient (concise without losing critical information)
+
+## Token Efficiency Guidelines
+
+When creating or refactoring rules:
+
+**Preserve:**
+
+- Critical context for rule effectiveness
+- Essential code examples
+- Key distinctions between correct/incorrect patterns
+
+**Eliminate:**
+
+- Redundant explanations
+- Overly verbose descriptions
+- Repeated information (unless explicitly needed)
+- Unnecessary elaboration
+
+**Structure:**
+
+- Use headings for quick scanning
+- Group related items in lists
+- Keep examples focused and minimal
+- Remove filler words
+
+Follow [cursor-rules.mdc](mdc:.cursor/rules/meta/cursor-rules.mdc) for formatting.

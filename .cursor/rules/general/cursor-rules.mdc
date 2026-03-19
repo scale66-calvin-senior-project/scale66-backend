@@ -1,0 +1,72 @@
+---
+description: How to add or edit Cursor rules in our project
+globs:
+alwaysApply: false
+---
+
+# Cursor Rules Organization
+
+## Directory Structure
+
+```
+.cursor/rules/
+├── backend/
+│   ├── api/          # FastAPI endpoints, middleware, routing
+│   ├── database/     # Supabase, RLS, CRUD
+│   ├── agents/       # AI agent patterns
+│   └── patterns/     # Singleton, DI, etc.
+├── frontend/
+│   ├── architecture/ # Feature modules, state, routing
+│   ├── components/   # Component patterns
+│   ├── hooks/        # Custom hooks
+│   └── services/     # API clients, integrations
+└── meta/             # Project-wide rules
+```
+
+## File Conventions
+
+- Use kebab-case with .mdc extension
+- Place in most appropriate category folder
+- Never in project root or directly in .cursor/rules/
+
+## Rule File Structure
+
+```markdown
+---
+description: Short rule description
+globs: optional/path/**/*
+alwaysApply: false
+---
+
+# Rule Title
+
+Content with:
+
+1. Instructions
+2. Code examples
+3. Guidelines
+```
+
+## Token Efficiency Standards
+
+All rules MUST be token-efficient:
+
+**Preserve:**
+
+- Critical context for rule effectiveness
+- Essential code examples
+- Key distinctions between patterns
+
+**Eliminate:**
+
+- Redundant explanations
+- Verbose descriptions
+- Duplicate information
+- Filler words and unnecessary elaboration
+
+**Structure:**
+
+- Use headings for quick scanning
+- Group related items in lists
+- Keep examples focused and minimal
+- Favor concise over verbose

@@ -1,0 +1,118 @@
+---
+description: AI Agent development pattern using BaseAgent generic class
+globs: backend/app/agents/**/*
+alwaysApply: false
+---
+
+# AI Agent Pattern
+
+All AI agents MUST extend `BaseAgent[InputT, OutputT]`.
+
+## Agent Structure
+
+```python
+from app.agents.base_agent import BaseAgent, ValidationError, ExecutionError
+from app.models.pipeline import YourAgentInput, YourAgentOutput
+
+class YourAgent(BaseAgent[YourAgentInput, YourAgentOutput]):
+    """
+    Brief description of agent purpose.
+    
+    Input: YourAgentInput (list key fields)
+    Output: YourAgentOutput (list key fields)
+    """
+    
+    def __init__(self):
+        super().__init__(agent_name="your_agent_name")
+    
+    async def _validate_input(self, input_data: YourAgentInput) -> None:
+        """Validate input data before execution."""
+        # Raise ValidationError if validation fails
+    
+    async def _execute(self, input_data: YourAgentInput) -> YourAgentOutput:
+        """Execute agent logic."""
+        # Raise ExecutionError if execution fails
+```
+
+## Singleton Pattern
+
+```python
+class YourAgent(BaseAgent[YourAgentInput, YourAgentOutput]):
+    _instance: Optional['YourAgent'] = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+# Create singleton instance at module level
+your_agent = YourAgent()
+```
+
+## Error Handling
+
+- Use `ValidationError` for input validation failures
+- Use `ExecutionError` for execution failures
+- Always log errors before raising
+
+```python
+try:
+    result = await some_operation()
+except Exception as e:
+    logger.error(f"Operation failed: {e}")
+    raise ExecutionError(f"Operation failed: {e}")
+```
+
+## Logging
+
+- INFO for major steps
+- DEBUG for detailed information
+- Include agent name (handled by BaseAgent)
+
+```python
+self.logger.info(f"Step 1/5: Processing data")
+self.logger.debug(f"Processing {len(items)} items")
+```
+
+## Agent Execution
+
+ALWAYS use public `run()` method, NEVER call `_validate_input()` or `_execute()` directly:
+
+```python
+# CORRECT
+result = await agent.run(input_data)
+
+# INCORRECT - Skips validation and error handling
+result = await agent._execute(input_data)
+```
+
+## Pipeline Integration
+
+```python
+# Step 1
+format_result = await carousel_format_decider.run(format_input)
+if not format_result.success:
+    raise ExecutionError(f"Format decision failed: {format_result.error_message}")
+
+# Step 2 uses Step 1 output
+story_result = await story_generator.run(
+    StoryGeneratorInput(
+        format_type=format_result.format_type,
+        num_slides=format_result.num_slides,
+    )
+)
+```
+
+## Type Safety
+
+- Always use Pydantic models for input/output
+- Define models in `app/models/pipeline.py`
+- Use correct generic types: `BaseAgent[InputType, OutputType]`
+
+## Documentation Requirements
+
+Each agent file MUST include:
+- Module docstring describing purpose
+- Input/Output specification
+- Position in pipeline
+- Connection to other agents

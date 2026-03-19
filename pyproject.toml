@@ -1,0 +1,94 @@
+[project]
+name = "scale66-backend"
+version = "2.0.0"
+description = "AI-powered carousel content generation platform"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core FastAPI dependencies
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "pydantic[email]>=2.10.0",
+    "python-multipart>=0.0.12",
+    "python-dotenv>=1.0.0",
+    "aiofiles>=24.1.0",
+    
+    # Web requests
+    "requests>=2.32.0",
+    "httpx>=0.28.0",
+    
+    # Supabase (Database, Auth, Storage)
+    "supabase>=2.10.0",
+    
+    # JWT verification and authentication
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    
+    # AI/ML APIs
+    "anthropic>=0.39.0",
+    "google-genai>=1.0.0",
+    
+    # Email service
+    "resend>=2.5.0",
+    
+    # Payment processing
+    "stripe>=11.0.0",
+    
+    # Image processing (for Finalizer agent)
+    "Pillow>=11.0.0",
+    
+    # Utilities
+    "python-magic>=0.4.27",
+    "python-slugify>=8.0.0",
+]
+
+[project.optional-dependencies]
+# Cloud storage options
+aws = ["boto3>=1.28.0"]
+cloudinary = ["cloudinary>=1.36.0"]
+
+# Background tasks
+celery = ["celery>=5.3.0", "redis>=5.0.0"]
+
+# Social media APIs (optional - most social features use official APIs via httpx)
+social = [
+    # Note: Social media posting is handled via official APIs in social_media_service.py
+    # These packages are optional and only needed for advanced features
+    # "instagrapi>=1.16.0",  # Alternative Instagram library
+    # "TikTokApi>=5.3.0",    # TikTok unofficial API (note: may break with platform changes)
+]
+
+# Development tools
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+

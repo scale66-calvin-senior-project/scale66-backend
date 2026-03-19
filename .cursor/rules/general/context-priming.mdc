@@ -1,0 +1,133 @@
+---
+alwaysApply: false
+---
+
+# Context Priming Rule
+
+## Purpose
+
+Manually tag this rule at conversation start to efficiently prime the agent with relevant context. Gather focused information while avoiding over-contextualization.
+
+## When to Use
+
+Tag when you need the agent to:
+- Understand existing code before changes
+- Have context about specific feature or module
+- Be aware of architectural patterns in specific area
+- Prepare for updates to particular codebase section
+
+## Context Gathering Process
+
+### 1. Identify Scope
+
+Determine:
+- Backend or frontend change?
+- Which specific feature/module/file?
+- Nature of change (new feature, bug fix, refactor)?
+
+### 2. Review Relevant Cursor Rules
+
+**Backend Changes:**
+- `.cursor/rules/backend/agents/` - If working with agents
+- `.cursor/rules/backend/api/` - If working with APIs
+- `.cursor/rules/backend/database/` - If working with database
+- `.cursor/rules/backend/patterns/` - If working with services
+
+**Frontend Changes:**
+- `.cursor/rules/frontend/architecture/` - If working with features
+- `.cursor/rules/frontend/components/` - If working with components
+
+### 3. Read Relevant README Section
+
+**Backend:** Read backend README, focus on:
+- Specific service/agent/API endpoint being modified
+- Related models and CRUD operations
+- Affected dependencies
+- Skip: Frontend info, unrelated services
+
+**Frontend:** Read frontend README, focus on:
+- Specific feature module being updated
+- Related components, hooks, services
+- State management patterns
+- Skip: Backend info, unrelated features
+
+**Full-Stack:** Read both, focus only on intersecting areas
+
+### 4. Handle External Documentation
+
+**If Documentation Mentioned But NOT Attached:**
+Prompt user: "I notice you mentioned [Documentation Name]. To ensure accuracy, could you please attach or tag the specific documentation you'd like me to reference?"
+
+Wait for documentation before proceeding.
+
+**Why This Matters:**
+- APIs change frequently
+- User may have specific version requirements
+- Ensures alignment with intended approach
+
+### 5. Examine Relevant Code
+
+**Backend:**
+- Read: Specific file(s), related models (app/models/), CRUD (app/crud/), API endpoints (app/api/v1/), dependent services
+- Skip: Unrelated agents/services/endpoints, frontend code, entire modules
+
+**Frontend:**
+- Read: Feature module structure, components within feature, associated hooks/services/types, related UI components, consuming pages
+- Skip: Unrelated features, backend code, entire UI library
+
+### 6. Identify Dependencies
+
+Look for:
+- Import statements
+- Existing patterns and conventions
+- Relevant configuration
+- Type definitions
+
+Avoid:
+- Reading every import's source
+- Global utilities unless directly used
+- Entire dependency trees
+
+## Context Quality Guidelines
+
+### Gather Context On:
+- Relevant cursor rules for area being modified
+- Attached/tagged external documentation
+- Direct file(s) being modified
+- Immediate dependencies (one level deep)
+- Relevant architectural patterns
+- Type definitions used
+- Feature-specific configuration
+
+### Do NOT Gather Context On:
+- Unrelated cursor rules
+- Your own knowledge of external APIs (always request docs)
+- Unrelated features or modules
+- Entire codebase "just in case"
+- Implementation details of third-party libraries
+- Test files (unless testing is focus)
+- Deprecated code
+
+## Output After Context Gathering
+
+Confirm to user (concisely):
+1. What cursor rules reviewed
+2. What README sections read
+3. What documentation examined
+4. What files examined
+5. Patterns/dependencies identified
+6. Ready to proceed
+
+If documentation mentioned but not provided, request it before confirming readiness.
+
+## Anti-Patterns
+
+NEVER:
+- Skip relevant cursor rules
+- Use own knowledge of external APIs when docs mentioned
+- Proceed without requesting docs when user mentions them
+- Read unrelated cursor rules
+- Read entire codebase to "get familiar"
+- Load all feature modules when working on one
+- Examine every file in directory
+- Assume correct API usage without user-provided docs

@@ -1,0 +1,485 @@
+---
+alwaysApply: false
+---
+
+## Supabase Table Structure
+
+-- ============================================================================
+-- COMPLETE SUPABASE DATABASE SCHEMA
+-- Based on provided ERD diagram
+-- ============================================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================================
+-- TABLE: USERS
+-- ============================================================================
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR UNIQUE NOT NULL,
+    subscription_tier VARCHAR CHECK (subscription_tier IN ('free', 'starter', 'growth', 'agency')) DEFAULT 'free',
+    stripe_customer_id VARCHAR UNIQUE,
+    onboarding_completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: BRAND_KITS
+-- ============================================================================
+CREATE TABLE brand_kits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    brand_name VARCHAR NOT NULL,
+    brand_niche TEXT,
+    brand_style TEXT,
+    customer_pain_points TEXT,
+    product_service_description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, brand_name)
+);
+
+-- ============================================================================
+-- TABLE: CAMPAIGNS
+-- ============================================================================
+CREATE TABLE campaigns (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    campaign_name VARCHAR NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: POSTS
+-- ============================================================================
+CREATE TABLE posts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    final_caption TEXT,
+    final_hashtags TEXT,
+    image_urls TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: POST_VARIATIONS
+-- ============================================================================
+CREATE TABLE post_variations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    variation_number INT NOT NULL,
+    caption TEXT,
+    hashtags TEXT,
+    image_urls TEXT,
+    is_posted BOOLEAN DEFAULT FALSE,
+    posted_platforms TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(post_id, variation_number)
+);
+
+-- ============================================================================
+-- TABLE: CHAT_HISTORY
+-- ============================================================================
+CREATE TABLE chat_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    message_type VARCHAR CHECK (message_type IN ('user', 'assistant', 'system')) NOT NULL,
+    message_content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: SOCIAL_MEDIA_ACCOUNTS
+-- ============================================================================
+CREATE TABLE social_media_accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    platform VARCHAR CHECK (platform IN ('instagram', 'tiktok', 'facebook', 'twitter', 'linkedin', 'youtube')) NOT NULL,
+    platform_user_id VARCHAR NOT NULL,
+    access_token TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, platform)
+);
+
+-- ============================================================================
+-- TABLE: PAYMENT_TRANSACTIONS
+-- ============================================================================
+CREATE TABLE payment_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    stripe_payment_intent_id VARCHAR UNIQUE NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    subscription_tier VARCHAR CHECK (subscription_tier IN ('free', 'starter', 'growth', 'agency')) NOT NULL,
+    status VARCHAR CHECK (status IN ('pending', 'succeeded', 'failed', 'refunded')) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- TABLE: SESSIONS
+-- ============================================================================
+CREATE TABLE sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_token VARCHAR UNIQUE NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- INDEXES
+-- ============================================================================
+
+-- Users table indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_stripe_customer_id ON users(stripe_customer_id);
+
+-- Brand kits table indexes
+CREATE INDEX idx_brand_kits_user_id ON brand_kits(user_id);
+CREATE INDEX idx_brand_kits_brand_name ON brand_kits(brand_name);
+
+-- Campaigns table indexes
+CREATE INDEX idx_campaigns_user_id ON campaigns(user_id);
+CREATE INDEX idx_campaigns_created_at ON campaigns(created_at DESC);
+
+-- Posts table indexes
+CREATE INDEX idx_posts_campaign_id ON posts(campaign_id);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+
+-- Post variations table indexes
+CREATE INDEX idx_post_variations_post_id ON post_variations(post_id);
+CREATE INDEX idx_post_variations_is_posted ON post_variations(is_posted);
+
+-- Chat history table indexes
+CREATE INDEX idx_chat_history_post_id ON chat_history(post_id);
+CREATE INDEX idx_chat_history_created_at ON chat_history(created_at DESC);
+
+-- Social media accounts table indexes
+CREATE INDEX idx_social_media_accounts_user_id ON social_media_accounts(user_id);
+CREATE INDEX idx_social_media_accounts_platform ON social_media_accounts(platform);
+
+-- Payment transactions table indexes
+CREATE INDEX idx_payment_transactions_user_id ON payment_transactions(user_id);
+CREATE INDEX idx_payment_transactions_status ON payment_transactions(status);
+CREATE INDEX idx_payment_transactions_created_at ON payment_transactions(created_at DESC);
+
+-- Sessions table indexes
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX idx_sessions_session_token ON sessions(session_token);
+CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
+
+-- ============================================================================
+-- ROW LEVEL SECURITY (RLS) POLICIES
+-- ============================================================================
+
+-- Enable RLS on all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE brand_kits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_variations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE social_media_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- USERS TABLE POLICIES
+-- ============================================================================
+
+-- Users can read their own data
+CREATE POLICY "Users can view own profile"
+    ON users FOR SELECT
+    USING (auth.uid() = id);
+
+-- Users can update their own data
+CREATE POLICY "Users can update own profile"
+    ON users FOR UPDATE
+    USING (auth.uid() = id);
+
+-- Allow insert during signup (handled by trigger or service role)
+CREATE POLICY "Enable insert for authenticated users during signup"
+    ON users FOR INSERT
+    WITH CHECK (auth.uid() = id);
+
+-- ============================================================================
+-- BRAND_KITS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own brand kits"
+    ON brand_kits FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own brand kits"
+    ON brand_kits FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own brand kits"
+    ON brand_kits FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own brand kits"
+    ON brand_kits FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- CAMPAIGNS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own campaigns"
+    ON campaigns FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own campaigns"
+    ON campaigns FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own campaigns"
+    ON campaigns FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own campaigns"
+    ON campaigns FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- POSTS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own posts"
+    ON posts FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM campaigns
+            WHERE campaigns.id = posts.campaign_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can create posts in own campaigns"
+    ON posts FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM campaigns
+            WHERE campaigns.id = campaign_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can update own posts"
+    ON posts FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM campaigns
+            WHERE campaigns.id = posts.campaign_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can delete own posts"
+    ON posts FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM campaigns
+            WHERE campaigns.id = posts.campaign_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+-- ============================================================================
+-- POST_VARIATIONS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own post variations"
+    ON post_variations FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = post_variations.post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can create post variations for own posts"
+    ON post_variations FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can update own post variations"
+    ON post_variations FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = post_variations.post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can delete own post variations"
+    ON post_variations FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = post_variations.post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+-- ============================================================================
+-- CHAT_HISTORY TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own chat history"
+    ON chat_history FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = chat_history.post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can create chat messages for own posts"
+    ON chat_history FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM posts
+            JOIN campaigns ON campaigns.id = posts.campaign_id
+            WHERE posts.id = post_id
+            AND campaigns.user_id = auth.uid()
+        )
+    );
+
+-- ============================================================================
+-- SOCIAL_MEDIA_ACCOUNTS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own social media accounts"
+    ON social_media_accounts FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own social media accounts"
+    ON social_media_accounts FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own social media accounts"
+    ON social_media_accounts FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own social media accounts"
+    ON social_media_accounts FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- PAYMENT_TRANSACTIONS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own payment transactions"
+    ON payment_transactions FOR SELECT
+    USING (auth.uid() = user_id);
+
+-- Only service role can insert payment transactions (from webhook)
+-- No update or delete policies for security
+
+-- ============================================================================
+-- SESSIONS TABLE POLICIES
+-- ============================================================================
+
+CREATE POLICY "Users can view own sessions"
+    ON sessions FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own sessions"
+    ON sessions FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own sessions"
+    ON sessions FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- TRIGGERS FOR UPDATED_AT TIMESTAMPS
+-- ============================================================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Apply trigger to all tables with updated_at
+CREATE TRIGGER update_users_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_brand_kits_updated_at
+    BEFORE UPDATE ON brand_kits
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_campaigns_updated_at
+    BEFORE UPDATE ON campaigns
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_posts_updated_at
+    BEFORE UPDATE ON posts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_post_variations_updated_at
+    BEFORE UPDATE ON post_variations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_social_media_accounts_updated_at
+    BEFORE UPDATE ON social_media_accounts
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_payment_transactions_updated_at
+    BEFORE UPDATE ON payment_transactions
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- TRIGGER TO AUTO-CREATE USER RECORD ON AUTH SIGNUP
+-- ============================================================================
+
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.users (id, email, subscription_tier)
+    VALUES (NEW.id, NEW.email, 'free');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger on auth.users table
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();

@@ -1,0 +1,56 @@
+---
+alwaysApply: false
+---
+# README Update Guidelines
+
+Update README.md files for: backend/, frontend/, root
+
+## Core Principles
+
+### Preserve Structure
+- Integrate changes into existing sections
+- Don't introduce new sections unless explicitly instructed
+- Work within established framework
+
+### Minimal Changes
+- Update only directly affected sections
+- Keep modifications focused
+- Avoid wholesale rewrites
+
+### No New Files
+- Never create additional .md files unless explicitly instructed
+- Update only the three existing README files
+
+## What to Update
+
+- Outdated technical information
+- Missing critical features now implemented
+- Changed dependencies or configuration
+- Modified API endpoints or interfaces
+
+## What to Remove
+
+- Deprecated features or removed code
+- Incorrect file paths or module names
+- Superseded architectural patterns
+
+## What NOT to Add
+
+- Minor changes or implementation details
+- Temporary or experimental features
+- Overly granular technical specifics
+
+## Priority Focus
+
+High priority:
+- Core architecture and design patterns
+- Essential setup steps
+- Key features and functionality
+- Critical dependencies
+
+Low priority:
+- Minor utilities
+- Small refactors
+- Internal details
+
+Documentation should balance recent changes with overall project scope.
