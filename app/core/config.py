@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     output_dir: str = "./output"
     save_local_output: bool = False
     
+    
     supabase_url: Optional[str] = None
     supabase_service_key: Optional[str] = None
     supabase_jwt_secret: Optional[str] = None
