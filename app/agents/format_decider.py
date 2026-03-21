@@ -1,9 +1,10 @@
 from typing import Optional
 
-from app.agents.base_agent import BaseAgent
+from app.agents.base_agent import BaseAgent, ExecutionError
 from app.models.pipeline import FormatDeciderInput, FormatDeciderOutput
 from app.models.structured import ClaudeFormatSelectionOutput
 from app.constants import FORMAT_DESCRIPTIONS
+from app.services.template_service import template_service
 
 
 class FormatDecider(BaseAgent[FormatDeciderInput, FormatDeciderOutput]):
@@ -25,28 +26,43 @@ class FormatDecider(BaseAgent[FormatDeciderInput, FormatDeciderOutput]):
     
     async def _execute(self, input_data: FormatDeciderInput) -> FormatDeciderOutput:
         prompt = self._build_prompt(input_data)
-        
+
         format_output = await self.anthropic.generate_structured_output(
             prompt=prompt,
             output_model=ClaudeFormatSelectionOutput,
             max_tokens=500,
             temperature=0.3,
         )
-        
+
+        # Ensure the selected format has templates; fall back to the first available format if not
+        available_format_names = {t.carousel_format for t in template_service.list_all_templates()}
+        format_type = format_output.format_type
+        if format_type not in available_format_names:
+            if not available_format_names:
+                raise ExecutionError("No carousel formats available — no templates loaded")
+            format_type = next(iter(available_format_names))
+
         return FormatDeciderOutput(
             step_name="format_decider",
             success=True,
-            format_type=format_output.format_type,
+            format_type=format_type,
             num_body_slides=format_output.num_body_slides,
             include_cta=False,
         )
     
     def _build_prompt(self, input_data: FormatDeciderInput) -> str:
+        # Only include formats that have at least one template in the template service
+        available_format_names = {t.carousel_format for t in template_service.list_all_templates()}
+
         # Build formatted list of available formats with descriptions
         format_list = "\n".join([
             f"### {fmt.value}\n{desc}"
             for fmt, desc in FORMAT_DESCRIPTIONS.items()
+            if fmt.value in available_format_names
         ])
+
+        if not format_list:
+            raise ExecutionError("No carousel formats available — no templates loaded")
         
         return f"""You are an expert social media marketing strategist selecting the optimal carousel format for a CONTENT REQUEST.
 
