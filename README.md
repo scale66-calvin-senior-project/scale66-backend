@@ -227,40 +227,6 @@ Base URL: `http://localhost:8000/api/v1`
 - formatters.py - Date formatting and transformations
 - validators.py - Input validation (email, URLs, colors)
 
-## Environment Variables
-
-Required environment variables:
-
-```env
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-SUPABASE_JWT_SECRET=your-jwt-secret
-
-# AI Services (Required for core functionality)
-ANTHROPIC_API_KEY=sk-ant-...
-GEMINI_API_KEY=...
-GEMINI_IMAGE_MODEL=gemini-3-pro-image-preview  # or gemini-2.5-flash-image
-
-# Optional Services
-RESEND_API_KEY=re_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-INSTAGRAM_CLIENT_ID=...
-INSTAGRAM_CLIENT_SECRET=...
-TIKTOK_CLIENT_KEY=...
-TIKTOK_CLIENT_SECRET=...
-
-# Application
-API_HOST=0.0.0.0
-API_PORT=8000
-DEBUG=True
-LOG_LEVEL=INFO
-```
-
-Copy `.env.example` and configure with your API keys.
-
 ## Database Setup
 
 **Supabase Configuration:**
@@ -315,9 +281,6 @@ uv run python main.py
 - Template selection and template-based image generation
 - Storage uploads to Supabase on each pipeline run
 - Singleton pattern for services and agents
-
-**In Progress:**
-
 - API endpoint handlers (agent integration)
-- CRUD operations (structure defined)
+- CRUD operations
 - External service integrations (email, social, payments)
