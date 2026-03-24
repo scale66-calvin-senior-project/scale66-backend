@@ -37,28 +37,36 @@ backend/
 ├── pyrightconfig.json        # Type checking configuration
 │
 └── app/
-    ├── agents/               # AI pipeline (orchestrator + 5 agents)
+    ├── agents/               # AI pipeline (orchestrator + 4 agents)
     │   ├── base_agent.py            # Base class with error handling and logging
-    │   ├── orchestrator.py          # Pipeline coordinator with run-specific logging
-    │   ├── carousel_format_decider.py # Format selection with structured outputs
-    │   ├── strategy_generator.py     # Strategic guidance generation for carousel slides
-    │   ├── text_generator.py        # Caption generation (runs before images)
-    │   ├── image_generator.py       # Image generation with template-based reference
-    │   └── finalizer.py             # Quality validation & upload (disabled for testing)
+    │   ├── orchestrator.py          # Pipeline coordinator with storage upload
+    │   ├── format_decider.py        # Format selection with structured outputs
+    │   ├── template_decider.py      # Template selection for chosen format
+    │   ├── caption_generator.py     # Caption generation (runs before images)
+    │   └── slide_generator.py       # Slide image generation with template reference
     │
     ├── api/                  # REST API endpoints
-    │   ├── deps.py                  # Dependency injection
+    │   ├── dependencies.py          # Dependency injection
+    │   ├── schemas/                 # API request/response schemas
+    │   │   ├── brand_kit.py         # Brand kit schemas
+    │   │   ├── campaign.py          # Campaign schemas
+    │   │   ├── post.py              # Post schemas
+    │   │   ├── user.py              # User schemas
+    │   │   ├── social_account.py    # Social account schemas
+    │   │   └── payment.py           # Payment schemas
     │   └── v1/                      # API version 1
-    │       ├── brand_kit.py         # Brand kit CRUD
+    │       ├── brand_kits.py        # Brand kit CRUD
     │       ├── campaigns.py         # Campaign management
-    │       ├── content.py           # AI content generation
     │       ├── posts.py             # Post management
-    │       ├── social.py            # Social media integration
-    │       └── payment.py           # Stripe integration
+    │       ├── users.py             # User management
+    │       ├── social_accounts.py   # Social media integration
+    │       └── payments.py          # Stripe integration
+    │
+    ├── constants/            # Application constants
+    │   └── carousel_formats.py      # Carousel format definitions
     │
     ├── core/                 # Core configuration
     │   ├── config.py                # Environment settings
-    │   ├── logging.py               # Logging configuration
     │   ├── security.py              # JWT validation
     │   └── supabase.py              # Supabase client
     │
@@ -67,33 +75,21 @@ backend/
     │   ├── brand_kit.py             # Brand kit operations
     │   ├── campaign.py              # Campaign operations
     │   ├── post.py                  # Post operations
-    │   ├── session.py               # Session management
+    │   ├── payment.py               # Payment operations
+    │   ├── social_account.py        # Social account operations
     │   └── user.py                  # User operations
     │
     ├── models/               # Pydantic schemas
-    │   ├── brand_kit.py             # Brand kit schemas
-    │   ├── campaign.py              # Campaign schemas
-    │   ├── post.py                  # Post schemas
-    │   ├── user.py                  # User schemas
-    │   ├── social.py                # Social media schemas
-    │   ├── payment.py               # Payment schemas
-    │   ├── content.py               # Content generation schemas
+    │   ├── brand_kit.py             # Brand kit model
     │   ├── common.py                # Shared schemas and enums
-    │   └── pipeline.py              # AI pipeline schemas
+    │   ├── pipeline.py              # AI pipeline I/O schemas
+    │   └── structured.py            # Structured output schemas for Claude
     │
-    ├── services/             # External integrations
-    │   ├── ai/
-    │   │   ├── anthropic_service.py # Claude API integration
-    │   │   └── gemini_service.py    # Gemini image generation
-    │   ├── email_service.py         # Resend email
-    │   ├── social_media_service.py  # Social platform APIs
-    │   ├── storage_service.py       # File storage
-    │   └── stripe_service.py        # Payment processing
-    │
-    └── utils/                # Utility functions
-        ├── file_handlers.py         # File operations
-        ├── formatters.py            # Data formatting
-        └── validators.py            # Input validation
+    └── services/             # External integrations
+        ├── ai/
+        │   ├── anthropic_service.py # Claude API integration
+        │   └── gemini_service.py    # Gemini image generation
+        └── template_service.py      # Template metadata and lookup
 ```
 
 ## Architecture Overview
@@ -102,22 +98,20 @@ backend/
 
 **Sequential carousel generation orchestrated by Orchestrator:**
 
-1. **Orchestrator** - Coordinates pipeline, manages state flow, and handles BrandKit fetching
+1. **Orchestrator** - Coordinates pipeline, manages state flow, handles BrandKit fetching, and uploads results to Supabase Storage
 2. **Format Decider** - Analyzes content request and selects optimal carousel format (5 format types)
-3. **Strategy Generator** - Creates strategic guidance for each slide defining purpose and approach
-4. **Text Generator** - Converts strategic guidance into short, punchy carousel captions
-5. **Image Generator** - Generates images WITH text baked in using template-based reference approach
-6. **Finalizer** - Validates image quality using Claude Vision and uploads to Supabase Storage (currently disabled for testing)
+3. **Template Decider** - Selects the optimal visual template for the chosen format and content request
+4. **Caption Generator** - Generates short, punchy captions for each slide (hook, body, CTA)
+5. **Slide Generator** - Generates slide images WITH captions baked in using template-based reference approach
 
-**Key Architecture:** Text generation runs BEFORE image generation. Hook image is generated from template reference, then body images reference the hook to maintain visual consistency. Gemini 3 Pro renders text directly in images, eliminating separate text overlay processing.
+**Key Architecture:** Caption generation runs BEFORE image generation. Images are generated using template reference files for visual consistency across slides. Gemini renders text directly into images, eliminating separate text overlay processing.
 
 **AI Models:**
 
-- Claude Sonnet 4.5 (format decisions, strategy generation, text generation, structured outputs)
+- Claude Sonnet 4.5 (format decisions, template selection, caption generation, structured outputs)
 - Gemini 3 Pro Image (image generation with text rendering and reference-based styling)
-- Claude Vision (quality validation - disabled in current version)
 
-**Implementation Status:** Complete - Orchestrator + all 5 pipeline agents implemented and tested. Finalizer temporarily disabled for development testing.
+**Implementation Status:** Complete - Orchestrator + all 4 pipeline agents implemented and tested. Images are uploaded to Supabase Storage on each run.
 
 ### API Endpoints
 
@@ -154,13 +148,6 @@ Base URL: `http://localhost:8000/api/v1`
 - API keys: Anthropic, Gemini, Supabase, Stripe, Resend
 - Model configuration and logging settings
 
-**logging.py** - Centralized logging
-
-- Application-wide configuration
-- Environment-aware (development/production)
-- Console and file output with rotation
-- Run-specific log files for each pipeline execution
-
 **security.py** - Authentication
 
 - JWT token validation (Supabase-issued)
@@ -186,7 +173,7 @@ Base URL: `http://localhost:8000/api/v1`
 
 **Entities:**
 
-- Brand Kit, Campaign, Post, User, Session
+- Brand Kit, Campaign, Post, User, Payment, Social Account
 
 **Implementation Status:** Structure defined, operations in progress
 
@@ -196,10 +183,9 @@ Base URL: `http://localhost:8000/api/v1`
 
 **Model Types:**
 
-- Entity models (User, BrandKit, Campaign, Post)
-- API request/response schemas (Create, Update, Response)
-- Pipeline schemas (6-step agent I/O models)
-- Common schemas (MessageResponse, ErrorResponse, enums)
+- Core models (BrandKit, pipeline I/O per agent, structured Claude outputs)
+- API request/response schemas (in app/api/schemas/ — brand kit, campaign, post, user, social account, payment)
+- Common schemas (shared enums and base types)
 
 **Benefits:**
 
@@ -229,11 +215,7 @@ Base URL: `http://localhost:8000/api/v1`
 
 **Other Services:**
 
-- Email Service - Resend API (structure defined)
-- Social Media Service - Instagram/TikTok OAuth (structure defined)
-- Storage Service - Supabase Storage (structure defined - uploads disabled in current version)
-- Stripe Service - Payment processing (structure defined)
-- Image Overlay Service - DEPRECATED (replaced by Gemini 3 Pro text rendering)
+- Template Service - Template metadata registry and lookup by format type
 
 ### Utilities
 
@@ -286,7 +268,7 @@ Copy `.env.example` and configure with your API keys.
 1. Create project at https://supabase.com
 2. Set up database schema via SQL Editor
 3. Enable Row Level Security on all tables
-4. Create storage bucket: `carousel-slides` (public)
+4. Create storage bucket: `carousels` (public)
 5. Configure authentication providers
 6. Copy credentials to `.env` file
 
@@ -325,13 +307,13 @@ uv run python main.py
 
 **Complete:**
 
-- Core infrastructure (config, logging with run-specific files, security, database)
+- Core infrastructure (config, security, database)
 - AI services (Anthropic with structured outputs + Gemini 3 Pro with reference-based generation)
-- Pydantic models and schemas (all entities + pipeline models with structured outputs)
-- AI pipeline (Orchestrator + all 5 agents with template-based reference flow)
-- Base agent class with error handling and enhanced logging
-- Strategic guidance principles for carousel planning
-- Template-based image generation with hook-to-body reference flow
+- Pydantic models and schemas (pipeline I/O, structured outputs, API schemas)
+- AI pipeline (Orchestrator + all 4 agents with template-based reference flow)
+- Base agent class with error handling and logging
+- Template selection and template-based image generation
+- Storage uploads to Supabase on each pipeline run
 - Singleton pattern for services and agents
 
 **In Progress:**
@@ -339,4 +321,3 @@ uv run python main.py
 - API endpoint handlers (agent integration)
 - CRUD operations (structure defined)
 - External service integrations (email, social, payments)
-- Finalizer implementation (quality validation and storage uploads)
