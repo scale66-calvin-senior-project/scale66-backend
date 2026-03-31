@@ -22,7 +22,6 @@ AI-powered carousel content generation platform built with FastAPI and Supabase.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Setup and run
-cd backend
 uv sync                          # Install dependencies
 cp .env.example .env            # Configure environment
 uv run uvicorn main:app --reload # Start server (http://localhost:8000)

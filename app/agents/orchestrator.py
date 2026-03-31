@@ -161,6 +161,19 @@ class Orchestrator(BaseAgent[OrchestratorInput, OrchestratorOutput]):
         except Exception as e:
             raise ExecutionError(f"Failed to fetch brand kit: {str(e)}")
     
+    def _ensure_bucket_exists(self, supabase, bucket_name: str) -> None:
+        """Create the storage bucket if it doesn't already exist."""
+        try:
+            supabase.storage.create_bucket(
+                bucket_name,
+                options={"public": True}
+            )
+        except Exception as e:
+            # Ignore "already exists" errors; raise anything else
+            err_str = str(e).lower()
+            if "already exists" not in err_str and "duplicate" not in err_str:
+                raise ExecutionError(f"Failed to create storage bucket '{bucket_name}': {e}")
+
     async def _upload_images_to_storage(
         self,
         carousel_id: str,
@@ -173,8 +186,9 @@ class Orchestrator(BaseAgent[OrchestratorInput, OrchestratorOutput]):
         supabase = get_supabase_admin_client()
         bucket_name = "carousels"
         slide_urls: List[str] = []
-        
+
         try:
+            self._ensure_bucket_exists(supabase, bucket_name)
             storage = supabase.storage.from_(bucket_name)
             
             # Upload hook slide (always first)

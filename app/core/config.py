@@ -6,7 +6,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     output_dir: str = "./output"
-    save_local_output: bool = True
+    save_local_output: bool = False
+    
     
     supabase_url: Optional[str] = None
     supabase_service_key: Optional[str] = None

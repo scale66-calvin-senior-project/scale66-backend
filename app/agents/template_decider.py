@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from app.agents.base_agent import BaseAgent
+from app.agents.base_agent import BaseAgent, ExecutionError
 from app.models.pipeline import TemplateDeciderInput, TemplateDeciderOutput
 from app.models.structured import ClaudeTemplateSelectionOutput
 from app.services.template_service import template_service, TemplateMetadata
@@ -25,7 +25,13 @@ class TemplateDecider(BaseAgent[TemplateDeciderInput, TemplateDeciderOutput]):
     
     async def _execute(self, input_data: TemplateDeciderInput) -> TemplateDeciderOutput:
         matching_templates = template_service.get_templates_for_format(input_data.format_type)
-        
+
+        # Safety net: if the chosen format has no templates, fall back to all available templates
+        if not matching_templates:
+            matching_templates = template_service.list_all_templates()
+        if not matching_templates:
+            raise ExecutionError("No templates available in the template service")
+
         prompt = self._build_prompt(
             input_data=input_data,
             templates=matching_templates
